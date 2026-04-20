@@ -1,0 +1,64 @@
+/**
+ * CRM CF7 Connector — styles admin
+ */
+
+.crm-cf7-admin-wrap .form-table th {
+    width: 220px;
+}
+
+.crm-cf7-admin-wrap input[type="password"],
+.crm-cf7-admin-wrap input[type="url"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.crm-cf7-test-result {
+    display: inline-block;
+    margin-left: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.crm-cf7-test-result[data-state="pending"] {
+    color: #1d2327;
+    background: #f0f0f1;
+}
+
+.crm-cf7-test-result[data-state="success"] {
+    color: #1a4731;
+    background: #d1fae5;
+}
+
+.crm-cf7-test-result[data-state="error"] {
+    color: #7f1d1d;
+    background: #fee2e2;
+}
+
+/* Panneau CRM dans l'éditeur CF7 */
+#crm-cf7-panel h3 {
+    border-top: 1px solid #dcdcde;
+    padding-top: 14px;
+}
+
+.crm-cf7-mapping-select {
+    min-width: 240px;
+    max-width: 100%;
+}
+
+.crm-cf7-mapping-select.crm-cf7-mapping-broken {
+    border-color: #dba617;
+    background: #fcf9e8;
+}
+
+.crm-cf7-section-toggle {
+    color: #646970;
+    margin-left: 6px;
+    font-size: 12px;
+    user-select: none;
+}
+
+fieldset.crm-cf7-disabled > *:not(p:first-of-type):not(p:nth-of-type(2)) {
+    opacity: 0.45;
+    pointer-events: none;
+}
