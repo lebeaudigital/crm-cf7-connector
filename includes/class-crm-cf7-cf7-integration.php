@@ -300,6 +300,9 @@ class CRM_CF7_Integration {
             $client_id = $this->upsert_client($clients_api, $client_payload);
             if ($client_id !== null) {
                 $contact_payload['client_id'] = $client_id;
+                error_log('[CRM CF7 Connector] Form #' . $form_id . ' → entreprise "' . ($client_payload['name'] ?? '') . '" liée au contact (client_id=' . $client_id . ').');
+            } else {
+                error_log('[CRM CF7 Connector] Form #' . $form_id . ' → impossible de récupérer client_id pour "' . ($client_payload['name'] ?? '') . '" — contact créé sans entreprise.');
             }
         }
 
@@ -328,7 +331,10 @@ class CRM_CF7_Integration {
         if (empty($payload['name'])) {
             return null;
         }
-        $existing = $api->find_by_name((string) $payload['name']);
+
+        $name = (string) $payload['name'];
+
+        $existing = $api->find_by_name($name);
         if (is_array($existing) && !empty($existing['id'])) {
             $update = $payload;
             unset($update['name']);
@@ -340,12 +346,29 @@ class CRM_CF7_Integration {
             }
             return (int) $existing['id'];
         }
+
         $resp = $api->create($payload);
         if (!$resp['success']) {
-            error_log('[CRM CF7 Connector] Création entreprise échouée : ' . $resp['message']);
+            error_log('[CRM CF7 Connector] Création entreprise échouée (HTTP ' . $resp['status'] . ') : ' . $resp['message']);
             return null;
         }
-        return $this->extract_id($resp['data']);
+
+        $id = $this->extract_id($resp['data']);
+        if ($id !== null) {
+            return $id;
+        }
+
+        // Fallback : la création a réussi mais la réponse ne contient pas d'id exploitable
+        // (peut arriver si la clé API ne peut pas relire le client juste créé via getById).
+        // On relance une recherche par nom pour récupérer l'id et garantir l'association.
+        error_log('[CRM CF7 Connector] Création entreprise OK mais id absent de la réponse — fallback recherche par nom pour "' . $name . '".');
+        $found = $api->find_by_name($name);
+        if (is_array($found) && !empty($found['id'])) {
+            return (int) $found['id'];
+        }
+
+        error_log('[CRM CF7 Connector] Fallback échoué — entreprise "' . $name . '" introuvable après création.');
+        return null;
     }
 
     /**
@@ -376,10 +399,22 @@ class CRM_CF7_Integration {
 
         $resp = $api->create($payload);
         if (!$resp['success']) {
-            error_log('[CRM CF7 Connector] Création contact échouée : ' . $resp['message']);
+            error_log('[CRM CF7 Connector] Création contact échouée (HTTP ' . $resp['status'] . ') : ' . $resp['message']);
             return null;
         }
-        return $this->extract_id($resp['data']);
+
+        $id = $this->extract_id($resp['data']);
+        if ($id !== null) {
+            return $id;
+        }
+
+        // Fallback : id absent de la réponse → recherche par email
+        error_log('[CRM CF7 Connector] Création contact OK mais id absent de la réponse — fallback recherche par email pour "' . $email . '".');
+        $found = $api->find_by_email($email);
+        if (is_array($found) && !empty($found['id'])) {
+            return (int) $found['id'];
+        }
+        return null;
     }
 
     private function extract_id($data): ?int {

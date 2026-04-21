@@ -121,7 +121,7 @@ Conventions :
 
 Le plugin se met à jour comme un plugin officiel WordPress :
 
-- Tag GitHub `vX.Y.Z` (ex: `v1.0.1`) → notification dans **Extensions → Mises à jour disponibles**.
+- Tag GitHub `vX.Y.Z` (ex: `v1.0.2`) → notification dans **Extensions → Mises à jour disponibles**.
 - Cache : 6 heures (transient `crm_cf7_connector_github_release`).
 - Pour forcer une vérification : visitez `/wp-admin/plugins.php?crm_cf7_force_update=1&_wpnonce=…`.
 
