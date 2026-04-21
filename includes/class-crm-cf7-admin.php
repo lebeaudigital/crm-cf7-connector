@@ -81,6 +81,7 @@ class CRM_CF7_Admin {
         $clean['default_list_market']  = sanitize_text_field((string) ($input['default_list_market'] ?? ''));
         $clean['default_company_tag']  = sanitize_text_field((string) ($input['default_company_tag'] ?? ''));
         $clean['skip_on_spam']         = !empty($input['skip_on_spam']);
+        $clean['process_async']        = !empty($input['process_async']);
 
         // Nettoyage de l'ancienne clé après migration vers default_list_market
         unset($clean['default_contact_tags'], $current['default_contact_tags']);
@@ -253,6 +254,23 @@ class CRM_CF7_Admin {
                                 />
                                 <?php esc_html_e('Ne pas envoyer au CRM si CF7 détecte un spam ou une erreur de validation.', 'crm-cf7-connector'); ?>
                             </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Performance', 'crm-cf7-connector'); ?></th>
+                        <td>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    name="<?php echo esc_attr(CRM_CF7_CONNECTOR_OPTION); ?>[process_async]"
+                                    value="1"
+                                    <?php checked(!empty($settings['process_async'])); ?>
+                                />
+                                <?php esc_html_e('Traiter l\'envoi au CRM en arrière-plan (recommandé).', 'crm-cf7-connector'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('Le visiteur reçoit la confirmation CF7 instantanément ; le push vers le CRM se fait juste après côté serveur via wp-cron. À décocher uniquement si vous avez besoin d\'un feedback synchrone (ex. dans un hook personnalisé après envoi).', 'crm-cf7-connector'); ?>
+                            </p>
                         </td>
                     </tr>
                 </table>

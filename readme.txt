@@ -4,7 +4,7 @@ Tags: contact form 7, cf7, crm, leads, lead generation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,12 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 5. Ouvrez un formulaire CF7 → onglet « CRM » → activez l'envoi et configurez le mapping.
 
 == Changelog ==
+
+= 1.0.4 =
+* Soumissions de formulaires beaucoup plus rapides : le push vers le CRM est désormais traité en arrière-plan via wp-cron (déclenché immédiatement par loopback non-bloquant).
+* Le visiteur reçoit la confirmation CF7 sans attendre les 3 à 5 secondes des appels API au CRM.
+* Nouvelle case à cocher dans Réglages → CRM CF7 → Comportement → « Traiter l'envoi au CRM en arrière-plan » (activée par défaut, désactivable si vous avez besoin d'un push synchrone).
+* Nettoyage automatique des événements cron en attente lors de la désactivation du plugin.
 
 = 1.0.3 =
 * Nouveau lien « Vérifier la MàJ » dans la ligne du plugin (Extensions → Extensions installées) qui force une nouvelle interrogation de GitHub sans attendre les 12h de cache WordPress.

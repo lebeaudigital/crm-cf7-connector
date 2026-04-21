@@ -13,7 +13,9 @@ if (!defined('ABSPATH')) {
 
 class CRM_CF7_Integration {
 
-    private const META_KEY = '_crm_cf7_mapping';
+    private const META_KEY      = '_crm_cf7_mapping';
+    public  const ASYNC_HOOK    = 'crm_cf7_process_submission';
+    private const PAYLOAD_TTL   = 5 * MINUTE_IN_SECONDS;
 
     private static ?CRM_CF7_Integration $instance = null;
 
@@ -31,6 +33,9 @@ class CRM_CF7_Integration {
 
         // Soumission frontend
         add_action('wpcf7_before_send_mail', [$this, 'on_form_submitted'], 10, 3);
+
+        // Traitement asynchrone (cron) — déclenché par wp_schedule_single_event
+        add_action(self::ASYNC_HOOK, [$this, 'process_async_submission'], 10, 1);
 
         // Assets admin (uniquement sur l'écran d'édition CF7)
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_assets']);
@@ -269,10 +274,68 @@ class CRM_CF7_Integration {
         $mapper   = new CRM_CF7_Mapper();
         $payloads = $mapper->build_payloads($posted, $config);
 
+        $async = (bool) CRM_CF7_Settings::get_value('process_async', true);
+
+        if ($async) {
+            $this->schedule_async_push($payloads, $form->id());
+            return;
+        }
+
         try {
-            $this->push_to_crm($payloads, $form->id(), $submission);
+            $this->push_to_crm($payloads, $form->id());
         } catch (Throwable $e) {
             error_log('[CRM CF7 Connector] Exception lors de l\'envoi au CRM : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Stocke le payload dans un transient et planifie un cron immédiat,
+     * puis déclenche un appel loopback non-bloquant à wp-cron.php pour
+     * que le traitement démarre tout de suite (sans attendre le tick cron
+     * naturel qui peut tarder selon le trafic du site).
+     *
+     * @param array<string, mixed> $payloads
+     */
+    private function schedule_async_push(array $payloads, int $form_id): void {
+        $key = 'crm_cf7_payload_' . wp_generate_password(16, false);
+
+        set_transient($key, [
+            'payloads' => $payloads,
+            'form_id'  => $form_id,
+        ], self::PAYLOAD_TTL);
+
+        wp_schedule_single_event(time(), self::ASYNC_HOOK, [$key]);
+
+        // Évite les doubles spawns si on est déjà en train de tourner sur cron
+        if (wp_doing_cron()) {
+            return;
+        }
+
+        // Loopback non-bloquant vers wp-cron.php : on ne bloque pas
+        // la réponse CF7 au visiteur.
+        $cron_url = site_url('wp-cron.php?doing_wp_cron=' . sprintf('%.22F', microtime(true)));
+        wp_remote_post($cron_url, [
+            'timeout'   => 0.01,
+            'blocking'  => false,
+            'sslverify' => apply_filters('https_local_ssl_verify', false),
+            'headers'   => ['Cache-Control' => 'no-cache'],
+        ]);
+    }
+
+    /**
+     * Hook cron : récupère le payload du transient et déclenche le push CRM.
+     */
+    public function process_async_submission(string $key): void {
+        $data = get_transient($key);
+        if (!is_array($data) || empty($data['payloads'])) {
+            return;
+        }
+        delete_transient($key);
+
+        try {
+            $this->push_to_crm($data['payloads'], (int) ($data['form_id'] ?? 0));
+        } catch (Throwable $e) {
+            error_log('[CRM CF7 Connector] Exception lors du push CRM (async) : ' . $e->getMessage());
         }
     }
 
@@ -281,7 +344,7 @@ class CRM_CF7_Integration {
      *
      * @param array{contact: array<string, mixed>, client: array<string, mixed>, deal: array<string, mixed>, has_company: bool, create_deal: bool} $payloads
      */
-    private function push_to_crm(array $payloads, int $form_id, WPCF7_Submission $submission): void {
+    private function push_to_crm(array $payloads, int $form_id): void {
         $contact_payload = $payloads['contact'];
         $client_payload  = $payloads['client'];
         $deal_payload    = $payloads['deal'];

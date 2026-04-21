@@ -23,6 +23,7 @@ class CRM_CF7_Settings {
             'default_list_market' => '',
             'default_company_tag' => '',
             'skip_on_spam'        => true,
+            'process_async'       => true,
         ];
     }
 

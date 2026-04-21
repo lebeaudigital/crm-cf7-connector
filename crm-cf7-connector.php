@@ -3,7 +3,7 @@
  * Plugin Name: CRM CF7 Connector
  * Plugin URI: https://github.com/lebeaudigital/crm-cf7-connector
  * Description: Connecte Contact Form 7 à votre CRM Le Beau Digital. Crée/met à jour automatiquement contacts, entreprises et affaires depuis vos formulaires.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Le Beau Digital
  * Author URI: https://lebeaudigital.com
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CRM_CF7_CONNECTOR_VERSION', '1.0.3');
+define('CRM_CF7_CONNECTOR_VERSION', '1.0.4');
 define('CRM_CF7_CONNECTOR_FILE', __FILE__);
 define('CRM_CF7_CONNECTOR_DIR', plugin_dir_path(__FILE__));
 define('CRM_CF7_CONNECTOR_URL', plugin_dir_url(__FILE__));
@@ -102,6 +102,7 @@ final class CRM_CF7_Connector {
 
     public function deactivate(): void {
         delete_transient('crm_cf7_connector_github_release');
+        wp_clear_scheduled_hook(CRM_CF7_Integration::ASYNC_HOOK);
     }
 
     public function is_cf7_active(): bool {
