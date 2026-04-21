@@ -78,9 +78,12 @@ class CRM_CF7_Admin {
         }
 
         $clean['default_source']       = sanitize_text_field((string) ($input['default_source'] ?? ''));
-        $clean['default_contact_tags'] = sanitize_text_field((string) ($input['default_contact_tags'] ?? ''));
+        $clean['default_list_market']  = sanitize_text_field((string) ($input['default_list_market'] ?? ''));
         $clean['default_company_tag']  = sanitize_text_field((string) ($input['default_company_tag'] ?? ''));
         $clean['skip_on_spam']         = !empty($input['skip_on_spam']);
+
+        // Nettoyage de l'ancienne clé après migration vers default_list_market
+        unset($clean['default_contact_tags'], $current['default_contact_tags']);
 
         return array_merge($current, $clean);
     }
@@ -200,19 +203,19 @@ class CRM_CF7_Admin {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="crm_cf7_default_contact_tags"><?php esc_html_e('Tags contact par défaut', 'crm-cf7-connector'); ?></label>
+                            <label for="crm_cf7_default_list_market"><?php esc_html_e('Liste(s) marketing par défaut', 'crm-cf7-connector'); ?></label>
                         </th>
                         <td>
                             <input
                                 type="text"
-                                id="crm_cf7_default_contact_tags"
-                                name="<?php echo esc_attr(CRM_CF7_CONNECTOR_OPTION); ?>[default_contact_tags]"
-                                value="<?php echo esc_attr($settings['default_contact_tags']); ?>"
+                                id="crm_cf7_default_list_market"
+                                name="<?php echo esc_attr(CRM_CF7_CONNECTOR_OPTION); ?>[default_list_market]"
+                                value="<?php echo esc_attr($settings['default_list_market']); ?>"
                                 class="regular-text"
-                                placeholder="<?php esc_attr_e('lead, web', 'crm-cf7-connector'); ?>"
+                                placeholder="<?php esc_attr_e('Newsletter, Contact CF7', 'crm-cf7-connector'); ?>"
                             />
                             <p class="description">
-                                <?php esc_html_e('Séparés par des virgules. Ajoutés à chaque nouveau contact.', 'crm-cf7-connector'); ?>
+                                <?php esc_html_e('Séparées par des virgules. Chaque contact sera abonné à ces listes marketing (créées automatiquement dans le CRM si elles n\'existent pas).', 'crm-cf7-connector'); ?>
                             </p>
                         </td>
                     </tr>

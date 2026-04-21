@@ -17,7 +17,8 @@
 
 ## Fonctionnalités
 
-- **Réglages globaux** : URL CRM, clé API, source par défaut, tags par défaut, tag entreprise par défaut, bouton « Tester la connexion ».
+- **Réglages globaux** : URL CRM, clé API, source par défaut, **liste(s) marketing par défaut**, tag entreprise par défaut, bouton « Tester la connexion ».
+- **Listes marketing CRM** : les contacts sont automatiquement abonnés à de vraies listes (table `marketing_lists` du CRM). Si la liste n'existe pas, elle est créée à la volée.
 - **Panneau « CRM » dans l'éditeur CF7** : un sélecteur par champ CRM, par formulaire.
 - **Mapping par tag (fallback)** : nommez vos champs CF7 `crm-email`, `crm-company-name`, `crm-deal-title`… et le mapping est automatique.
 - **Upsert intelligent** :

@@ -20,7 +20,7 @@ class CRM_CF7_Settings {
             'api_url'             => CRM_CF7_CONNECTOR_DEFAULT_API_URL,
             'api_key'             => '',
             'default_source'      => 'Site web',
-            'default_contact_tags'=> '',
+            'default_list_market' => '',
             'default_company_tag' => '',
             'skip_on_spam'        => true,
         ];
@@ -33,6 +33,10 @@ class CRM_CF7_Settings {
         $stored = get_option(CRM_CF7_CONNECTOR_OPTION, []);
         if (!is_array($stored)) {
             $stored = [];
+        }
+        // Migration douce : ancienne clé default_contact_tags → default_list_market
+        if (!isset($stored['default_list_market']) && isset($stored['default_contact_tags'])) {
+            $stored['default_list_market'] = $stored['default_contact_tags'];
         }
         return array_merge(self::get_defaults(), $stored);
     }

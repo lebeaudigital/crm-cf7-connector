@@ -19,7 +19,7 @@ class CRM_CF7_Mapper {
     /** Champs supportés pour le mapping UI. */
     public const CONTACT_FIELDS = [
         'first_name', 'last_name', 'email', 'phone',
-        'position', 'source', 'notes', 'tags',
+        'position', 'source', 'notes', 'list_market',
     ];
 
     public const CLIENT_FIELDS = [
@@ -125,10 +125,10 @@ class CRM_CF7_Mapper {
 
     /**
      * Normalise / renforce le payload contact :
-     *   - Sépare automatiquement first_name/last_name si seul un nom complet est fourni
-     *     dans un champ courant (your-name, name, full-name, fullname).
+     *   - Sépare automatiquement first_name/last_name si seul un nom complet est fourni.
      *   - Ajoute la source par défaut.
-     *   - Ajoute les tags par défaut.
+     *   - Fusionne la liste marketing par défaut avec celle(s) issue(s) du formulaire.
+     *   - Convertit list_market en array (le CRM crée/assigne chaque liste séparément).
      *
      * @param array<string, mixed> $contact
      * @return array<string, mixed>
@@ -140,14 +140,16 @@ class CRM_CF7_Mapper {
             $contact['source'] = (string) $settings['default_source'];
         }
 
-        $default_tags = trim((string) ($settings['default_contact_tags'] ?? ''));
-        if ($default_tags !== '') {
-            $contact['tags'] = isset($contact['tags']) && $contact['tags'] !== ''
-                ? rtrim((string) $contact['tags'], ', ') . ', ' . $default_tags
-                : $default_tags;
+        $form_lists    = $this->parse_list_market($contact['list_market'] ?? '');
+        $default_lists = $this->parse_list_market((string) ($settings['default_list_market'] ?? ''));
+
+        $merged_lists = array_values(array_unique(array_merge($form_lists, $default_lists), SORT_STRING));
+        if (!empty($merged_lists)) {
+            $contact['list_market'] = $merged_lists;
+        } else {
+            unset($contact['list_market']);
         }
 
-        // Si on n'a qu'un nom complet (cas le plus fréquent en CF7), tente un split.
         if (empty($contact['first_name']) && empty($contact['last_name']) && !empty($contact['full_name'])) {
             [$first, $last] = $this->split_name((string) $contact['full_name']);
             $contact['first_name'] = $first;
@@ -156,6 +158,28 @@ class CRM_CF7_Mapper {
         }
 
         return $contact;
+    }
+
+    /**
+     * Convertit une valeur list_market (string CSV ou array) en tableau de noms uniques.
+     *
+     * @param mixed $value
+     * @return string[]
+     */
+    private function parse_list_market($value): array {
+        if (is_array($value)) {
+            $items = $value;
+        } else {
+            $items = preg_split('/\s*,\s*/', (string) $value) ?: [];
+        }
+        $clean = [];
+        foreach ($items as $item) {
+            $name = trim((string) $item);
+            if ($name !== '') {
+                $clean[] = $name;
+            }
+        }
+        return array_values(array_unique($clean, SORT_STRING));
     }
 
     /**

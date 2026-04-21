@@ -4,7 +4,7 @@ Tags: contact form 7, cf7, crm, leads, lead generation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,8 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 * Mapping par tag : nommez vos champs CF7 `crm-first_name`, `crm-company-name`, `crm-deal-title`… et le mapping est automatique.
 * Upsert intelligent : recherche par email pour un contact, par nom pour une entreprise, puis création ou mise à jour.
 * Création optionnelle d'une affaire (deal) à chaque soumission.
-* Source par défaut, tags contact par défaut, tag entreprise par défaut.
+* Source par défaut, liste(s) marketing par défaut, tag entreprise par défaut.
+* Abonnement automatique aux listes marketing du CRM (table `marketing_lists`) — création de la liste si elle n'existe pas.
 * Envoi ignoré si CF7 détecte un spam ou une erreur de validation.
 * Mises à jour via les releases GitHub (lebeaudigital/crm-cf7-connector).
 
@@ -34,6 +35,12 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 5. Ouvrez un formulaire CF7 → onglet « CRM » → activez l'envoi et configurez le mapping.
 
 == Changelog ==
+
+= 1.0.1 =
+* Le champ « tags » du contact est remplacé par « list_market » : les contacts sont désormais abonnés à de vraies listes marketing du CRM (table `marketing_lists`).
+* Création automatique de la liste si elle n'existe pas (insensible à la casse).
+* Migration douce : l'ancien réglage « Tags contact par défaut » est repris automatiquement comme « Liste(s) marketing par défaut ».
+* Nécessite le patch CRM correspondant : `Contact::update()` gère maintenant `list_market` (en plus de `Contact::create()`).
 
 = 1.0.0 =
 * Première version : connexion CF7 ↔ CRM Le Beau Digital (contacts, entreprises, affaires).
