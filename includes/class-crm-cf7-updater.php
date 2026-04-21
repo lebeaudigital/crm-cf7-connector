@@ -53,7 +53,24 @@ class CRM_CF7_Updater {
         add_filter('plugins_api', [$this, 'plugin_info'], 20, 3);
         add_filter('upgrader_post_install', [$this, 'post_install'], 10, 3);
         add_filter('plugin_row_meta', [$this, 'plugin_row_meta'], 10, 2);
+        add_filter('plugin_action_links_' . CRM_CF7_CONNECTOR_BASENAME, [$this, 'plugin_action_links']);
         add_action('admin_init', [$this, 'handle_force_check']);
+    }
+
+    /**
+     * Ajoute un lien « Vérifier la MàJ » dans la ligne du plugin.
+     *
+     * @param string[] $links
+     * @return string[]
+     */
+    public function plugin_action_links(array $links): array {
+        $url = wp_nonce_url(
+            add_query_arg('crm_cf7_force_update', '1', admin_url('plugins.php')),
+            'crm_cf7_force_update'
+        );
+        $links[] = '<a href="' . esc_url($url) . '">'
+                 . esc_html__('Vérifier la MàJ', 'crm-cf7-connector') . '</a>';
+        return $links;
     }
 
     private function get_github_release(): ?object {

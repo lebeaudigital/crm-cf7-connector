@@ -259,6 +259,28 @@ class CRM_CF7_Admin {
 
                 <?php submit_button(); ?>
             </form>
+
+            <h2 class="title"><?php esc_html_e('Mises à jour', 'crm-cf7-connector'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Version installée', 'crm-cf7-connector'); ?></th>
+                    <td>
+                        <code><?php echo esc_html(CRM_CF7_CONNECTOR_VERSION); ?></code>
+                        <?php
+                        $force_url = wp_nonce_url(
+                            add_query_arg('crm_cf7_force_update', '1', admin_url('plugins.php')),
+                            'crm_cf7_force_update'
+                        );
+                        ?>
+                        <a href="<?php echo esc_url($force_url); ?>" class="button button-secondary" style="margin-left:10px;">
+                            <?php esc_html_e('Vérifier les mises à jour', 'crm-cf7-connector'); ?>
+                        </a>
+                        <p class="description">
+                            <?php esc_html_e('Force WordPress à interroger GitHub immédiatement. Si une nouvelle version est disponible, elle apparaîtra dans Extensions → Mises à jour disponibles.', 'crm-cf7-connector'); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
         </div>
         <?php
     }

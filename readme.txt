@@ -4,7 +4,7 @@ Tags: contact form 7, cf7, crm, leads, lead generation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,10 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 5. Ouvrez un formulaire CF7 → onglet « CRM » → activez l'envoi et configurez le mapping.
 
 == Changelog ==
+
+= 1.0.3 =
+* Nouveau lien « Vérifier la MàJ » dans la ligne du plugin (Extensions → Extensions installées) qui force une nouvelle interrogation de GitHub sans attendre les 12h de cache WordPress.
+* Nouveau bouton « Vérifier les mises à jour » dans Réglages → CRM CF7 (avec affichage de la version installée).
 
 = 1.0.2 =
 * Correctif : le contact est désormais correctement associé à l'entreprise lorsque les deux sont créés dans la même soumission.
