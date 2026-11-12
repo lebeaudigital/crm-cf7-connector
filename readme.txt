@@ -4,7 +4,7 @@ Tags: contact form 7, cf7, crm, leads, lead generation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 5. Ouvrez un formulaire CF7 → onglet « CRM » → activez l'envoi et configurez le mapping.
 
 == Changelog ==
+
+= 1.0.7 =
+* Correctif : la page « Ajouter un formulaire » de Contact Form 7 ne plante plus quand le plugin est actif. Un formulaire neuf n'a pas encore d'identifiant, et le panneau CRM l'acceptait comme un entier.
 
 = 1.0.6 =
 * Nouveau champ CRM `full_name` (nom complet) : un seul champ « Nom » est découpé en prénom et nom.

@@ -88,8 +88,7 @@ class CRM_CF7_Integration {
      * Rendu du panneau CRM dans l'éditeur CF7.
      */
     public function render_editor_panel(WPCF7_ContactForm $form): void {
-        $form_id = $form->id();
-        $config  = self::get_form_config($form_id);
+        $config = self::get_form_config($form->id());
         $fields  = CRM_CF7_Mapper::get_form_field_names($form);
 
         wp_nonce_field('crm_cf7_save_form_config', 'crm_cf7_form_nonce');
@@ -214,7 +213,8 @@ class CRM_CF7_Integration {
             )) {
             return;
         }
-        if (!current_user_can('wpcf7_edit_contact_form', $form->id())) {
+        $form_id = self::normalize_form_id($form->id());
+        if ($form_id <= 0 || !current_user_can('wpcf7_edit_contact_form', $form_id)) {
             return;
         }
 
@@ -228,7 +228,7 @@ class CRM_CF7_Integration {
             'mapping'     => $this->sanitize_mapping($raw['mapping'] ?? []),
         ];
 
-        update_post_meta($form->id(), self::META_KEY, $config);
+        update_post_meta($form_id, self::META_KEY, $config);
     }
 
     /**
@@ -262,18 +262,35 @@ class CRM_CF7_Integration {
     }
 
     /**
+     * Un nouveau formulaire CF7 n'a pas encore d'ID (null) tant qu'il n'est pas enregistré.
+     *
+     * @param mixed $form_id
+     */
+    private static function normalize_form_id($form_id): int {
+        return is_numeric($form_id) ? (int) $form_id : 0;
+    }
+
+    /**
+     * @param mixed $form_id
      * @return array<string, mixed>
      */
-    public static function get_form_config(int $form_id): array {
+    public static function get_form_config($form_id): array {
+        $defaults = [
+            'enabled'     => false,
+            'create_deal' => false,
+            'mapping'     => [],
+        ];
+
+        $form_id = self::normalize_form_id($form_id);
+        if ($form_id <= 0) {
+            return $defaults;
+        }
+
         $stored = get_post_meta($form_id, self::META_KEY, true);
         if (!is_array($stored)) {
             $stored = [];
         }
-        return wp_parse_args($stored, [
-            'enabled'     => false,
-            'create_deal' => false,
-            'mapping'     => [],
-        ]);
+        return wp_parse_args($stored, $defaults);
     }
 
     /**
@@ -294,13 +311,18 @@ class CRM_CF7_Integration {
             return;
         }
 
-        $config = self::get_form_config($form->id());
+        $form_id = self::normalize_form_id($form->id());
+        if ($form_id <= 0) {
+            return;
+        }
+
+        $config = self::get_form_config($form_id);
         if (empty($config['enabled'])) {
             return;
         }
 
         if (!CRM_CF7_Settings::has_credentials()) {
-            error_log('[CRM CF7 Connector] Aucune clé API configurée — soumission ignorée pour le formulaire #' . $form->id());
+            error_log('[CRM CF7 Connector] Aucune clé API configurée — soumission ignorée pour le formulaire #' . $form_id);
             return;
         }
 
@@ -321,12 +343,12 @@ class CRM_CF7_Integration {
         $async = (bool) CRM_CF7_Settings::get_value('process_async', true);
 
         if ($async) {
-            $this->schedule_async_push($payloads, $form->id());
+            $this->schedule_async_push($payloads, $form_id);
             return;
         }
 
         try {
-            $this->push_to_crm($payloads, $form->id());
+            $this->push_to_crm($payloads, $form_id);
         } catch (Throwable $e) {
             error_log('[CRM CF7 Connector] Exception lors de l\'envoi au CRM : ' . $e->getMessage());
         }
