@@ -249,7 +249,16 @@ class CRM_CF7_Integration {
      *
      * @param mixed $abort   Référence (peut être renseignée pour annuler l'envoi)
      */
-    public function on_form_submitted(WPCF7_ContactForm $form, &$abort, WPCF7_Submission $submission): void {
+    /**
+     * @param mixed $form
+     * @param mixed $abort
+     * @param mixed $submission
+     */
+    public function on_form_submitted($form, &$abort = false, $submission = null): void {
+        if (!$form instanceof WPCF7_ContactForm || !$submission instanceof WPCF7_Submission) {
+            return;
+        }
+
         $config = self::get_form_config($form->id());
         if (empty($config['enabled'])) {
             return;
@@ -325,7 +334,11 @@ class CRM_CF7_Integration {
     /**
      * Hook cron : récupère le payload du transient et déclenche le push CRM.
      */
-    public function process_async_submission(string $key): void {
+    public function process_async_submission($key = ''): void {
+        if (!is_string($key) || $key === '') {
+            return;
+        }
+
         $data = get_transient($key);
         if (!is_array($data) || empty($data['payloads'])) {
             return;

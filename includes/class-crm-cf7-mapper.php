@@ -80,11 +80,7 @@ class CRM_CF7_Mapper {
             if ($cf7_field === '' || !array_key_exists($cf7_field, $posted_data)) {
                 continue;
             }
-            $value = $posted_data[$cf7_field];
-            if (is_array($value)) {
-                $value = implode(', ', array_map('strval', $value));
-            }
-            $value = trim((string) $value);
+            $value = $this->stringify_posted_value($posted_data[$cf7_field]);
             if ($value !== '') {
                 $output[$crm_field] = $value;
             }
@@ -111,11 +107,7 @@ class CRM_CF7_Mapper {
             if (!array_key_exists($candidate, $posted_data)) {
                 continue;
             }
-            $value = $posted_data[$candidate];
-            if (is_array($value)) {
-                $value = implode(', ', array_map('strval', $value));
-            }
-            $value = trim((string) $value);
+            $value = $this->stringify_posted_value($posted_data[$candidate]);
             if ($value !== '') {
                 $current[$crm_field] = $value;
             }
@@ -222,6 +214,35 @@ class CRM_CF7_Mapper {
         }
 
         return $deal;
+    }
+
+    /**
+     * CF7 envoie des chaînes ou des tableaux de chaînes. Un objet sans
+     * __toString (filtre tiers sur wpcf7_posted_data) ferait un TypeError.
+     *
+     * @param mixed $value
+     */
+    private function stringify_posted_value($value): string {
+        if (is_array($value)) {
+            $parts = [];
+            foreach ($value as $item) {
+                $part = $this->stringify_posted_value($item);
+                if ($part !== '') {
+                    $parts[] = $part;
+                }
+            }
+            return implode(', ', $parts);
+        }
+
+        if (is_bool($value) || is_int($value) || is_float($value) || is_string($value)) {
+            return trim((string) $value);
+        }
+
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return trim((string) $value);
+        }
+
+        return '';
     }
 
     /**
