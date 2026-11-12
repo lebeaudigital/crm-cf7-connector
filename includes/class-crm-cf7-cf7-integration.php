@@ -55,6 +55,35 @@ class CRM_CF7_Integration {
         return $panels;
     }
 
+    private function field_label(string $field): string {
+        $labels = [
+            'full_name'            => __('Nom complet', 'crm-cf7-connector'),
+            'first_name'           => __('Prénom', 'crm-cf7-connector'),
+            'last_name'            => __('Nom', 'crm-cf7-connector'),
+            'email'                => __('E-mail', 'crm-cf7-connector'),
+            'phone'                => __('Téléphone', 'crm-cf7-connector'),
+            'position'             => __('Fonction', 'crm-cf7-connector'),
+            'source'               => __('Source', 'crm-cf7-connector'),
+            'notes'                => __('Notes', 'crm-cf7-connector'),
+            'list_market'          => __('Liste(s) marketing', 'crm-cf7-connector'),
+            'name'                 => __('Nom de l\'entreprise', 'crm-cf7-connector'),
+            'website'              => __('Site web', 'crm-cf7-connector'),
+            'sector'               => __('Secteur', 'crm-cf7-connector'),
+            'address'              => __('Adresse', 'crm-cf7-connector'),
+            'city'                 => __('Ville', 'crm-cf7-connector'),
+            'postal_code'          => __('Code postal', 'crm-cf7-connector'),
+            'country'              => __('Pays', 'crm-cf7-connector'),
+            'siret'                => __('SIRET', 'crm-cf7-connector'),
+            'status'               => __('Statut', 'crm-cf7-connector'),
+            'title'                => __('Titre', 'crm-cf7-connector'),
+            'stage'                => __('Étape', 'crm-cf7-connector'),
+            'probability'          => __('Probabilité', 'crm-cf7-connector'),
+            'expected_close_date'  => __('Date de clôture', 'crm-cf7-connector'),
+            'amount'               => __('Montant', 'crm-cf7-connector'),
+        ];
+        return $labels[$field] ?? $field;
+    }
+
     /**
      * Rendu du panneau CRM dans l'éditeur CF7.
      */
@@ -140,9 +169,10 @@ class CRM_CF7_Integration {
                         $selected = $mapping[$object_key][$crm_field] ?? '';
                         ?>
                         <tr>
-                            <th scope="row" style="width:180px;">
+                            <th scope="row" style="width:220px;">
                                 <label for="crm_cf7_<?php echo esc_attr($object_key . '_' . $crm_field); ?>">
-                                    <code><?php echo esc_html($crm_field); ?></code>
+                                    <?php echo esc_html($this->field_label($crm_field)); ?>
+                                    <br><code><?php echo esc_html($crm_field); ?></code>
                                 </label>
                             </th>
                             <td>
@@ -159,6 +189,11 @@ class CRM_CF7_Integration {
                                     );
                                     ?>
                                 </select>
+                                <?php if ($crm_field === 'full_name') : ?>
+                                    <p class="description">
+                                        <?php esc_html_e('Un seul champ « Nom ». Le premier mot devient le prénom, le reste le nom. S’il n’y a qu’un mot, le nom est « - ».', 'crm-cf7-connector'); ?>
+                                    </p>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

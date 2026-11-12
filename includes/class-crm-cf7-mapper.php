@@ -18,7 +18,7 @@ class CRM_CF7_Mapper {
 
     /** Champs supportés pour le mapping UI. */
     public const CONTACT_FIELDS = [
-        'first_name', 'last_name', 'email', 'phone',
+        'full_name', 'first_name', 'last_name', 'email', 'phone',
         'position', 'source', 'notes', 'list_market',
     ];
 
@@ -50,6 +50,7 @@ class CRM_CF7_Mapper {
         $client  = $this->merge_crm_prefixed_fields($client,  $posted_data, self::CLIENT_FIELDS,  'crm-company-');
         $deal    = $this->merge_crm_prefixed_fields($deal,    $posted_data, self::DEAL_FIELDS,    'crm-deal-');
 
+        $contact = $this->guess_full_name($contact, $posted_data);
         $contact = $this->normalize_contact($contact);
         $client  = $this->normalize_client($client);
         $deal    = $this->normalize_deal($deal);
@@ -142,11 +143,62 @@ class CRM_CF7_Mapper {
             unset($contact['list_market']);
         }
 
-        if (empty($contact['first_name']) && empty($contact['last_name']) && !empty($contact['full_name'])) {
-            [$first, $last] = $this->split_name((string) $contact['full_name']);
+        $full  = trim((string) ($contact['full_name'] ?? ''));
+        $first = trim((string) ($contact['first_name'] ?? ''));
+        $last  = trim((string) ($contact['last_name'] ?? ''));
+        unset($contact['full_name']);
+
+        if ($first === '' && $last === '' && $full !== '') {
+            [$first, $last] = $this->split_name($full);
+        } elseif ($last === '' && $first !== '' && preg_match('/\s/u', $first)) {
+            // Champ « Nom » mappé sur first_name : « Elo Heilikman » → Elo / Heilikman.
+            [$first, $last] = $this->split_name($first);
+        } elseif ($first === '' && $last !== '' && preg_match('/\s/u', $last)) {
+            [$first, $last] = $this->split_name($last);
+        }
+
+        // L'API CRM exige les deux. Un seul mot (« Elo ») reste le prénom.
+        if ($first !== '' && $last === '') {
+            $last = '-';
+        } elseif ($last !== '' && $first === '') {
+            $first = '-';
+        }
+
+        if ($first !== '') {
             $contact['first_name'] = $first;
-            $contact['last_name']  = $last;
-            unset($contact['full_name']);
+        } else {
+            unset($contact['first_name']);
+        }
+        if ($last !== '') {
+            $contact['last_name'] = $last;
+        } else {
+            unset($contact['last_name']);
+        }
+
+        return $contact;
+    }
+
+    /**
+     * Si aucun nom n'est mappé, reprend les noms de champs CF7 les plus courants.
+     *
+     * @param array<string, mixed> $contact
+     * @param array<string, mixed> $posted_data
+     * @return array<string, mixed>
+     */
+    private function guess_full_name(array $contact, array $posted_data): array {
+        if (!empty($contact['full_name']) || !empty($contact['first_name']) || !empty($contact['last_name'])) {
+            return $contact;
+        }
+
+        foreach (['your-name', 'your_name', 'nom', 'name', 'fullname', 'full-name', 'nom-complet'] as $key) {
+            if (!array_key_exists($key, $posted_data)) {
+                continue;
+            }
+            $value = $this->stringify_posted_value($posted_data[$key]);
+            if ($value !== '') {
+                $contact['full_name'] = $value;
+                break;
+            }
         }
 
         return $contact;

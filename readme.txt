@@ -4,7 +4,7 @@ Tags: contact form 7, cf7, crm, leads, lead generation
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 8.0
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,13 @@ CRM CF7 Connector envoie chaque soumission Contact Form 7 vers l'API REST du CRM
 5. Ouvrez un formulaire CF7 → onglet « CRM » → activez l'envoi et configurez le mapping.
 
 == Changelog ==
+
+= 1.0.6 =
+* Nouveau champ CRM `full_name` (nom complet) : un seul champ « Nom » est découpé en prénom et nom.
+* Si le champ « Nom » est déjà mappé sur `first_name` et contient plusieurs mots, le découpage se fait aussi.
+* Un seul mot (« Elo ») est accepté : le nom envoyé au CRM est « - », car l’API exige prénom et nom.
+* Les champs CF7 courants non mappés (`your-name`, `nom`, `name`…) sont repris automatiquement.
+* Préfixe direct : `[text* crm-full_name]`.
 
 = 1.0.5 =
 * Correctif : les vérifications de mise à jour et certains hooks WordPress ne provoquent plus d'erreur fatale lorsque WordPress passe une valeur inattendue (false, null, tableau). C'est ce qui déclenchait l'e-mail automatique « une extension a causé une erreur fatale ».

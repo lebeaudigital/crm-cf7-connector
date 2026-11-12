@@ -76,12 +76,13 @@ Si vous ne configurez aucun mapping UI, le plugin lit directement les noms de ch
 Exemple :
 
 ```text
-[text* crm-first_name]
-[text* crm-last_name]
+[text* crm-full_name]
 [email* crm-email]
 [text crm-company-name]
-[text crm-deal-title]
+[hidden crm-list_market "Demande de brief"]
 ```
+
+`crm-full_name` est un seul champ « Nom » : « Elo Heilikman » devient prénom `Elo` et nom `Heilikman`. S’il n’y a qu’un mot, le nom envoyé au CRM est `-` (l’API exige prénom et nom). Un champ `your-name` non mappé est aussi repris automatiquement.
 
 Les deux modes peuvent coexister : l'UI prime, le préfixe sert de fallback.
 
